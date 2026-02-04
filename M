@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\HARDWARE\DESCRIPTION\System\BIOS]
+"BIOSVendor"="American Megatrends Inc."
+"BIOSVersion"="G513RC.311"
+"SystemManufacturer"="ASUSTeK COMPUTER INC."
+"SystemProductName"="ROG Strix G15 G513RC"
+"SystemFamily"="ROG Strix"
