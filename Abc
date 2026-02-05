@@ -1,0 +1,165 @@
+javascript:(function() {
+    // 1. Kiểm tra xem tool đã chạy chưa để tránh tạo trùng lặp
+    if (document.getElementById('my-custom-tool-ui')) {
+        alert('Tool đang chạy rồi!');
+        return;
+    }
+
+    // --- CẤU HÌNH CSS ---
+    const style = document.createElement('style');
+    style.innerHTML = `
+        /* Logo nhỏ để bật tắt */
+        #my-tool-icon {
+            position: fixed; top: 10px; right: 10px; width: 50px; height: 50px;
+            background: #ff4757; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-family: sans-serif;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 999999;
+            transition: transform 0.2s; user-select: none;
+        }
+        #my-tool-icon:hover { transform: scale(1.1); }
+        
+        /* Giao diện chính */
+        #my-custom-tool-ui {
+            position: fixed; top: 100px; right: 100px; width: 350px;
+            background: #2f3542; color: #fff; font-family: monospace;
+            border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 999999; display: none; overflow: hidden;
+            border: 1px solid #57606f;
+        }
+
+        /* Thanh tiêu đề để kéo */
+        #tool-header {
+            padding: 10px; background: #57606f; cursor: move;
+            font-weight: bold; display: flex; justify-content: space-between;
+            user-select: none;
+        }
+        
+        /* Nội dung bên trong */
+        #tool-body { padding: 15px; max-height: 400px; overflow-y: auto; }
+        
+        /* Các nút bấm */
+        .tool-btn {
+            display: block; width: 100%; padding: 8px; margin-bottom: 8px;
+            background: #1e90ff; color: white; border: none; border-radius: 4px;
+            cursor: pointer; font-family: inherit;
+        }
+        .tool-btn:hover { background: #3742fa; }
+        .tool-btn.red { background: #ff4757; }
+        .tool-btn.red:hover { background: #ff6b81; }
+
+        /* Vùng hiển thị kết quả */
+        #result-area {
+            width: 100%; height: 150px; background: #000; color: #0f0;
+            border: 1px solid #555; font-size: 11px; padding: 5px;
+            box-sizing: border-box; resize: vertical; margin-top: 10px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // --- TẠO GIAO DIỆN HTML ---
+    
+    // 1. Tạo Logo
+    const icon = document.createElement('div');
+    icon.id = 'my-tool-icon';
+    icon.innerText = 'TOOL';
+    icon.title = 'Bật/Tắt Menu';
+    document.body.appendChild(icon);
+
+    // 2. Tạo Bảng điều khiển (Panel)
+    const panel = document.createElement('div');
+    panel.id = 'my-custom-tool-ui';
+    panel.innerHTML = `
+        <div id="tool-header">
+            <span>⚙️ Control Panel</span>
+            <span style="cursor:pointer;" id="close-panel-x">❌</span>
+        </div>
+        <div id="tool-body">
+            <button class="tool-btn" id="btn-fullscreen">📺 Full Screen (On/Off)</button>
+            <button class="tool-btn" id="btn-get-storage">🔑 Get LocalStorage</button>
+            <textarea id="result-area" placeholder="Kết quả sẽ hiện ở đây..."></textarea>
+            <button class="tool-btn red" id="btn-copy">📋 Copy Kết Quả</button>
+        </div>
+    `;
+    document.body.appendChild(panel);
+
+    // --- XỬ LÝ CHỨC NĂNG ---
+
+    // 1. Bật tắt UI bằng Logo
+    let isVisible = false;
+    icon.onclick = function() {
+        isVisible = !isVisible;
+        panel.style.display = isVisible ? 'block' : 'none';
+    };
+    
+    document.getElementById('close-panel-x').onclick = function() {
+        panel.style.display = 'none';
+        isVisible = false;
+    };
+
+    // 2. Chức năng Fullscreen
+    document.getElementById('btn-fullscreen').onclick = function() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`Lỗi: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    // 3. Chức năng lấy LocalStorage (UgPhone hoặc web bất kỳ)
+    document.getElementById('btn-get-storage').onclick = function() {
+        const textArea = document.getElementById('result-area');
+        try {
+            // Lấy toàn bộ LocalStorage
+            const allStorage = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                allStorage[key] = localStorage.getItem(key);
+            }
+            
+            // Format đẹp JSON
+            const result = JSON.stringify(allStorage, null, 2);
+            textArea.value = result;
+            
+            // Thông báo nếu tìm thấy key nghi vấn
+            if(JSON.stringify(allStorage).toLowerCase().includes("token")) {
+                alert("Đã tìm thấy Token/Auth trong dữ liệu!");
+            }
+        } catch (e) {
+            textArea.value = "Lỗi: " + e;
+        }
+    };
+
+    // 4. Chức năng Copy
+    document.getElementById('btn-copy').onclick = function() {
+        const textArea = document.getElementById('result-area');
+        textArea.select();
+        document.execCommand('copy');
+        alert("Đã copy vào bộ nhớ đệm!");
+    };
+
+    // --- XỬ LÝ KÉO THẢ (DRAG & DROP) ---
+    const header = document.getElementById('tool-header');
+    let isDragging = false, offsetX = 0, offsetY = 0;
+
+    header.onmousedown = function(e) {
+        isDragging = true;
+        offsetX = e.clientX - panel.offsetLeft;
+        offsetY = e.clientY - panel.offsetTop;
+    };
+
+    document.onmousemove = function(e) {
+        if (isDragging) {
+            panel.style.left = (e.clientX - offsetX) + 'px';
+            panel.style.top = (e.clientY - offsetY) + 'px';
+            panel.style.right = 'auto'; // Reset right để không bị kẹt
+        }
+    };
+
+    document.onmouseup = function() {
+        isDragging = false;
+    };
+
+})();
