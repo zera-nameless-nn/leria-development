@@ -12,7 +12,7 @@ local G2L = {};
 
 -- StarterGui.LALOL Hub Backdoor
 G2L["1"] = Instance.new("ScreenGui", game:GetService('CoreGui'):WaitForChild('RobloxGui'));
-G2L["1"]["Name"] = [[LALOL Hub Backdoor]];
+G2L["1"]["Name"] = [[Leria Hub Backdoor]];
 G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
 G2L["1"]["ResetOnSpawn"] = false;
 
